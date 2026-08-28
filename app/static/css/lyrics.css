@@ -1,0 +1,207 @@
+/* --- Visualizador de Letras Sincronizadas (Estilo Karaokê Apple Music) --- */
+.lyrics-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: calc(100vh - var(--player-height));
+  background: rgba(10, 10, 14, 0.95);
+  backdrop-filter: blur(48px);
+  -webkit-backdrop-filter: blur(48px);
+  z-index: 40;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeInLyrics 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lyrics-overlay.active {
+  display: flex;
+}
+
+@keyframes fadeInLyrics {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lyrics-backdrop-glow {
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 140%;
+  height: 140%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(90px) brightness(0.22) saturate(2);
+  opacity: 0.85;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.lyrics-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lyrics-track-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lyrics-cover-mini {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.lyrics-header-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.lyrics-header-artist {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.lyrics-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-refetch-lyrics {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.btn-refetch-lyrics:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.04);
+}
+
+.btn-close-lyrics {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-close-lyrics:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(1.08);
+}
+
+.btn-close-lyrics svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Área de Rolagem das Letras */
+.lyrics-body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow-y: auto;
+  padding: 100px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  scroll-behavior: smooth;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+.lyrics-line {
+  font-size: 34px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.22);
+  padding: 14px 22px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+  line-height: 1.35;
+  letter-spacing: -0.5px;
+  max-width: 850px;
+}
+
+.lyrics-line:hover {
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lyrics-line.active {
+  font-size: 40px;
+  color: #ffffff;
+  transform: scale(1.03);
+  text-shadow: 0 0 32px rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.lyrics-empty-state {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 16px;
+  text-align: center;
+  max-width: 400px;
+}
+
+.lyrics-empty-icon svg {
+  width: 54px;
+  height: 54px;
+  stroke-width: 1.5px;
+  color: var(--text-muted);
+}
+
+/* Responsividade de Letras no Celular */
+@media (max-width: 768px) {
+  .lyrics-line {
+    font-size: 22px;
+    padding: 10px 14px;
+  }
+  .lyrics-line.active {
+    font-size: 26px;
+  }
+  .lyrics-header {
+    padding: 16px 20px;
+  }
+  .lyrics-body {
+    padding: 60px 20px;
+  }
+}

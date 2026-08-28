@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Harmony Music — Self-Hosted Music & Media Hub</title>
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/lyrics.css">
+  <link rel="icon" href="/static/img/default-cover.svg" type="image/svg+xml">
+  <!-- Lucide Icons local -->
+  <script src="/static/js/lucide.min.js"></script>
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Modal para Criar Nova Playlist -->
+  <div class="modal-overlay" id="modalCreatePlaylist">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="plus-circle" style="color: var(--accent-primary);"></i>
+          Criar Nova Playlist
+        </h3>
+        <button class="btn-icon-close" id="btnCloseModalPlaylist"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">Nome da Playlist</label>
+        <input type="text" id="inputPlaylistName" class="modal-input" placeholder="Ex: Minhas Favoritas, Rock Nacional, Para Treinar..." autofocus>
+        
+        <label class="modal-label" style="margin-top: 14px;">Descrição (Opcional)</label>
+        <textarea id="inputPlaylistDesc" class="modal-textarea" rows="3" placeholder="Adicione uma breve descrição para esta playlist..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" id="btnCancelModalPlaylist">Cancelar</button>
+        <button class="btn-modal-confirm" id="btnConfirmCreatePlaylist">Criar Playlist</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para Adicionar Música à Playlist Existente -->
+  <div class="modal-overlay" id="modalAddToPlaylist">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <i data-lucide="list-plus" style="color: var(--accent-primary);"></i>
+          Adicionar à Playlist
+        </h3>
+        <button class="btn-icon-close" id="btnCloseModalAddToPlaylist"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;" id="modalAddToPlaylistTrackName">Selecione uma playlist:</p>
+        <div class="playlist-select-list" id="modalPlaylistSelectList"></div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button class="btn-modal-cancel" id="btnQuickCreateInAddModal">
+          <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+          <span>Nova Playlist</span>
+        </button>
+        <button class="btn-modal-cancel" id="btnCancelModalAddToPlaylist">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu de Contexto Customizado (Botão Direito / Ações) -->
+  <div class="custom-context-menu" id="customContextMenu">
+    <div class="context-menu-header">
+      <img src="/static/img/default-cover.svg" id="ctxCover" class="ctx-cover" alt="Cover">
+      <div class="ctx-info">
+        <span class="ctx-title" id="ctxTitle">Título</span>
+        <span class="ctx-artist" id="ctxArtist">Artista</span>
+      </div>
+    </div>
+    <div class="context-menu-divider"></div>
+    <button class="context-menu-item" id="ctxPlayNow">
+      <i data-lucide="play"></i>
+      <span>Tocar Agora</span>
+    </button>
+    <button class="context-menu-item" id="ctxPlayNext">
+      <i data-lucide="list-plus"></i>
+      <span>Tocar a Seguir</span>
+    </button>
+    <button class="context-menu-item" id="ctxAddToQueue">
+      <i data-lucide="list-music"></i>
+      <span>Adicionar à Fila</span>
+    </button>
+    <button class="context-menu-item" id="ctxAddToPlaylist">
+      <i data-lucide="folder-plus"></i>
+      <span>Adicionar à Playlist...</span>
+    </button>
+    <button class="context-menu-item" id="ctxToggleFavorite">
+      <i data-lucide="heart" id="ctxFavIcon"></i>
+      <span id="ctxFavText">Adicionar aos Favoritos</span>
+    </button>
+    <div class="context-menu-divider"></div>
+    <button class="context-menu-item" id="ctxGoToAlbum">
+      <i data-lucide="disc"></i>
+      <span>Ir para o Álbum</span>
+    </button>
+    <button class="context-menu-item" id="ctxGoToArtist">
+      <i data-lucide="mic-2"></i>
+      <span>Ir para o Artista</span>
+    </button>
+    <button class="context-menu-item" id="ctxViewLyrics">
+      <i data-lucide="mic"></i>
+      <span>Ver Letra Sincronizada</span>
+    </button>
+  </div>
+
+  <!-- Painel Lateral da Fila de Reprodução (Queue Drawer) -->
+  <div class="queue-drawer" id="queueDrawer">
+    <div class="queue-header">
+      <div class="queue-header-title">
+        <i data-lucide="list-music" style="color: var(--accent-primary); width: 20px; height: 20px;"></i>
+        <span>Fila de Reprodução</span>
+      </div>
+      <div class="queue-header-actions">
+        <button class="btn-clear-queue" id="btnClearQueue" title="Limpar Fila">
+          <span>Limpar</span>
+        </button>
+        <button class="btn-close-queue" id="btnCloseQueue" title="Fechar">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="queue-body" id="queueBody"></div>
+  </div>
+
+  <!-- Layout Principal -->
+  <div class="app-container">
+    
+    <!-- Sidebar Desktop (Spotify Style) -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="music-2"></i>
+        </div>
+        <div class="brand-info">
+          <div class="brand-title">HARMONY</div>
+          <div class="brand-badge">MUSIC HUB</div>
+        </div>
+      </div>
+
+      <!-- Menu Principal -->
+      <nav class="nav-section">
+        <div class="nav-label">Menu</div>
+        <a class="nav-item active" data-view="home">
+          <i data-lucide="home"></i>
+          <span>Início</span>
+        </a>
+        <a class="nav-item" data-view="tracks">
+          <i data-lucide="music"></i>
+          <span>Músicas</span>
+        </a>
+        <a class="nav-item" data-view="downloader">
+          <i data-lucide="arrow-down-circle"></i>
+          <span>Central de Downloads</span>
+        </a>
+      </nav>
+
+      <!-- Seção Biblioteca -->
+      <nav class="nav-section">
+        <div class="nav-label">Sua Biblioteca</div>
+        <a class="nav-item" data-view="playlists">
+          <i data-lucide="list-music"></i>
+          <span>Playlists</span>
+        </a>
+        <a class="nav-item" data-view="albums">
+          <i data-lucide="disc"></i>
+          <span>Álbuns</span>
+        </a>
+        <a class="nav-item" data-view="artists">
+          <i data-lucide="mic-2"></i>
+          <span>Artistas</span>
+        </a>
+        <a class="nav-item" data-view="favorites">
+          <i data-lucide="heart"></i>
+          <span>Músicas Curtidas</span>
+        </a>
+      </nav>
+
+      <!-- Card Rápido de Download no Rodapé da Sidebar -->
+      <div class="sidebar-footer">
+        <button class="quick-download-btn" id="btnQuickDownload">
+          <i data-lucide="plus-circle"></i>
+          <span>Baixar Mídia / Link</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="main-content">
+      
+      <!-- Top Bar com Efeito de Vidro Fosco & Busca -->
+      <header class="top-bar">
+        <!-- Logo Mobile -->
+        <div class="mobile-brand-header">
+          <div class="brand-icon-sm">
+            <i data-lucide="music-2"></i>
+          </div>
+          <span class="brand-title-sm">Harmony</span>
+        </div>
+
+        <div class="search-box">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="searchInput" placeholder="O que você quer ouvir?">
+          <button class="search-clear-btn" id="btnSearchClear" style="display: none;" title="Limpar">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+
+        <div class="top-actions">
+          <button class="btn-icon" id="btnScanLibrary" title="Atualizar Biblioteca">
+            <i data-lucide="refresh-cw"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- 1. View: Início (Home - Spotify / YT Music Style) -->
+      <section class="view-container active" id="view-home">
+        <!-- Saudação do Dia -->
+        <div class="home-greeting-wrap">
+          <h1 class="home-greeting" id="homeGreetingText">Boa tarde</h1>
+        </div>
+
+        <!-- Grade de Acesso Rápido 6 Cards (Estilo Spotify) -->
+        <div class="quick-access-grid" id="homeQuickAccessGrid"></div>
+
+        <!-- Seção: Suas Playlists -->
+        <div class="section-title-wrap">
+          <h2>Suas Playlists</h2>
+          <button class="btn-create-playlist-pill" id="btnHomeCreatePlaylist">
+            <i data-lucide="plus"></i>
+            <span>Nova Playlist</span>
+          </button>
+        </div>
+        <div class="card-grid" id="homePlaylistsGrid"></div>
+
+        <!-- Seção: Adicionadas Recentemente -->
+        <div class="section-title-wrap" style="margin-top: 36px;">
+          <h2>Adicionadas Recentemente</h2>
+        </div>
+        <div class="card-grid" id="homeRecentGrid"></div>
+
+        <!-- Seção: Álbuns em Destaque -->
+        <div class="section-title-wrap" style="margin-top: 36px;">
+          <h2>Álbuns em Destaque</h2>
+        </div>
+        <div class="card-grid" id="homeFeaturedAlbumsGrid"></div>
+      </section>
+
+      <!-- 2. View: Playlists (Grade de Playlists) -->
+      <section class="view-container" id="view-playlists">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Playlists</h1>
+            <p class="view-subtitle">Suas listas de reprodução personalizadas e importadas.</p>
+          </div>
+          <button class="quick-download-btn" id="btnOpenCreatePlaylistModal" style="width: auto; padding: 10px 20px;">
+            <i data-lucide="plus-circle"></i>
+            <span>Criar Playlist</span>
+          </button>
+        </div>
+        <div class="card-grid" id="playlistsGrid"></div>
+      </section>
+
+      <!-- 2.1 View: Detalhes da Playlist -->
+      <section class="view-container" id="view-playlist-detail">
+        <div class="detail-header">
+          <button class="btn-back" id="btnBackToPlaylists">
+            <i data-lucide="arrow-left"></i> Voltar para Playlists
+          </button>
+          <div class="detail-hero">
+            <img src="/static/img/default-cover.svg" id="playlistDetailCover" class="detail-cover" alt="Playlist Cover">
+            <div class="detail-info">
+              <span class="detail-tag">PLAYLIST</span>
+              <h1 class="detail-title" id="playlistDetailTitle">Nome da Playlist</h1>
+              <p class="detail-meta" id="playlistDetailMeta">0 música(s)</p>
+              <div class="detail-actions">
+                <button class="btn-detail-play" id="btnPlayPlaylistAll">
+                  <i data-lucide="play" style="fill: currentColor;"></i>
+                  <span>Tocar Playlist</span>
+                </button>
+                <button class="btn-detail-shuffle" id="btnShufflePlaylist">
+                  <i data-lucide="shuffle"></i>
+                  <span>Aleatório</span>
+                </button>
+                <button class="btn-detail-delete" id="btnDeletePlaylist" title="Excluir Playlist">
+                  <i data-lucide="trash-2"></i>
+                  <span>Excluir</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="track-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th>Título</th>
+                <th class="col-hide-mobile">Álbum</th>
+                <th class="col-hide-mobile">Duração</th>
+                <th style="text-align: right; width: 60px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="playlistTracksTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. View: Músicas (Tracks) -->
+      <section class="view-container" id="view-tracks">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Músicas</h1>
+            <p class="view-subtitle" id="tracksSubtitle">Todas as faixas da sua biblioteca local.</p>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="track-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th>Título</th>
+                <th class="col-hide-mobile">Álbum</th>
+                <th class="col-hide-mobile">Duração</th>
+                <th style="text-align: right; width: 60px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tracksTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 4. View: Álbuns (Grade de Álbuns) -->
+      <section class="view-container" id="view-albums">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Álbuns</h1>
+            <p class="view-subtitle">Coleções e álbuns organizados na biblioteca.</p>
+          </div>
+        </div>
+        <div class="card-grid" id="albumsGrid"></div>
+      </section>
+
+      <!-- 4.1 View: Detalhe do Álbum -->
+      <section class="view-container" id="view-album-detail">
+        <div class="detail-header">
+          <button class="btn-back" id="btnBackToAlbums">
+            <i data-lucide="arrow-left"></i> Voltar para Álbuns
+          </button>
+          <div class="detail-hero">
+            <img src="/static/img/default-cover.svg" id="albumDetailCover" class="detail-cover" alt="Album Cover">
+            <div class="detail-info">
+              <span class="detail-tag">ÁLBUM</span>
+              <h1 class="detail-title" id="albumDetailTitle">Nome do Álbum</h1>
+              <p class="detail-meta" id="albumDetailMeta">Artista • X faixas</p>
+              <div class="detail-actions">
+                <button class="btn-detail-play" id="btnPlayAlbumAll">
+                  <i data-lucide="play" style="fill: currentColor;"></i>
+                  <span>Tocar Álbum</span>
+                </button>
+                <button class="btn-detail-shuffle" id="btnShuffleAlbum">
+                  <i data-lucide="shuffle"></i>
+                  <span>Aleatório</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="track-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th>Título</th>
+                <th class="col-hide-mobile">Álbum</th>
+                <th class="col-hide-mobile">Duração</th>
+                <th style="text-align: right; width: 60px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="albumTracksTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 5. View: Artistas (Grade de Artistas) -->
+      <section class="view-container" id="view-artists">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Artistas</h1>
+            <p class="view-subtitle">Navegue pelos artistas da sua coleção.</p>
+          </div>
+        </div>
+        <div class="card-grid" id="artistsGrid"></div>
+      </section>
+
+      <!-- 5.1 View: Detalhe do Artista -->
+      <section class="view-container" id="view-artist-detail">
+        <div class="detail-header">
+          <button class="btn-back" id="btnBackToArtists">
+            <i data-lucide="arrow-left"></i> Voltar para Artistas
+          </button>
+          <div class="detail-hero">
+            <img src="/static/img/default-cover.svg" id="artistDetailCover" class="detail-cover artist-round" alt="Artist Avatar">
+            <div class="detail-info">
+              <span class="detail-tag">ARTISTA</span>
+              <h1 class="detail-title" id="artistDetailTitle">Nome do Artista</h1>
+              <p class="detail-meta" id="artistDetailMeta">X faixas na biblioteca</p>
+              <div class="detail-actions">
+                <button class="btn-detail-play" id="btnPlayArtistAll">
+                  <i data-lucide="play" style="fill: currentColor;"></i>
+                  <span>Tocar Músicas</span>
+                </button>
+                <button class="btn-detail-shuffle" id="btnShuffleArtist">
+                  <i data-lucide="shuffle"></i>
+                  <span>Aleatório</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="track-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th>Título</th>
+                <th class="col-hide-mobile">Álbum</th>
+                <th class="col-hide-mobile">Duração</th>
+                <th style="text-align: right; width: 60px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="artistTracksTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. View: Favoritos -->
+      <section class="view-container" id="view-favorites">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Músicas Curtidas</h1>
+            <p class="view-subtitle">Suas músicas favoritas marcadas com coração.</p>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="track-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th>Título</th>
+                <th class="col-hide-mobile">Álbum</th>
+                <th class="col-hide-mobile">Duração</th>
+                <th style="text-align: right; width: 60px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="favoritesTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 7. View: Central de Downloads (Yoinks Style) -->
+      <section class="view-container" id="view-downloader">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title">Central de Downloads</h1>
+            <p class="view-subtitle">Baixe músicas, álbuns e playlists completas com capas em alta resolução e letras sincronizadas.</p>
+          </div>
+        </div>
+
+        <div class="yoinks-hero">
+          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="link" style="color: var(--accent-primary); width: 22px; height: 22px;"></i>
+            Cole o link da mídia ou playlist
+          </h2>
+          <p style="color: var(--text-secondary); font-size: 14px;">Suporte a Playlists do Spotify, YouTube, SoundCloud e mais de 1.800 sites com vinculação inteligente de faixas já baixadas.</p>
+          
+          <div class="yoinks-input-wrapper">
+            <input type="text" class="yoinks-input" id="yoinksUrlInput" placeholder="Cole aqui o link do Spotify, YouTube, etc...">
+            <button class="btn-inspect" id="btnInspect">
+              <i data-lucide="search"></i>
+              <span>Inspecionar</span>
+            </button>
+          </div>
+
+          <!-- Card de Prévia & Seletor de Formato -->
+          <div class="inspect-preview-card" id="inspectPreviewCard">
+            <div class="preview-content">
+              <img src="/static/img/default-cover.svg" id="previewThumb" class="preview-thumb" alt="Thumbnail">
+              <div class="preview-details">
+                <div class="preview-title" id="previewTitle">Título da Mídia</div>
+                <div class="preview-author" id="previewAuthor">Canal / Artista</div>
+                
+                <div class="format-selector-tabs">
+                  <button class="tab-btn active" id="tabAudio">
+                    <i data-lucide="music" style="width: 15px; height: 15px;"></i>
+                    Áudio
+                  </button>
+                  <button class="tab-btn" id="tabVideo">
+                    <i data-lucide="video" style="width: 15px; height: 15px;"></i>
+                    Vídeo
+                  </button>
+                </div>
+
+                <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Qualidade / Formato:</label>
+                <select class="quality-select" id="qualitySelect"></select>
+
+                <div>
+                  <button class="quick-download-btn" id="btnConfirmDownload" style="max-width: 220px;">
+                    <i data-lucide="arrow-down-to-line"></i>
+                    <span>Baixar Agora</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fila de Downloads e Histórico -->
+        <div class="section-title-wrap">
+          <i data-lucide="history" style="color: var(--accent-primary); width: 20px; height: 20px;"></i>
+          <h2>Fila & Downloads Recentes</h2>
+        </div>
+        <div id="downloadsQueueList"></div>
+      </section>
+
+      <!-- 7. View: Resultados de Busca Unificada -->
+      <section class="view-container" id="view-search">
+        <div class="view-header">
+          <div>
+            <h1 class="view-title" id="searchHeaderTitle">Resultados da Busca</h1>
+            <p class="view-subtitle" id="searchHeaderSubtitle">Digite algo para pesquisar faixas, álbuns, artistas e playlists.</p>
+          </div>
+        </div>
+
+        <div id="searchResultsContainer" class="search-results-container"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Barra do Player de Áudio (Spotify / Mobile Mini-Player Style) -->
+  <footer class="player-bar" id="mainPlayerBar">
+    <!-- Linha de progresso no topo da barra para celular -->
+    <div class="mobile-progress-container">
+      <div class="mobile-progress-fill" id="mobileProgressFill"></div>
+    </div>
+
+    <!-- Esquerda: Info da Faixa Atual -->
+    <div class="player-left" id="playerTrackInfoContainer">
+      <img src="/static/img/default-cover.svg" class="player-cover" id="playerCover" alt="Cover">
+      <div class="player-track-info">
+        <span class="player-title" id="playerTitle">Nenhuma música tocando</span>
+        <span class="player-artist" id="playerArtist">—</span>
+      </div>
+      <button class="btn-fav-player" id="btnFavCurrent" title="Favoritar">
+        <i data-lucide="heart" id="btnFavCurrentIcon"></i>
+      </button>
+    </div>
+
+    <!-- Centro: Controles Desktop & Barra de Progresso -->
+    <div class="player-center">
+      <div class="player-controls">
+        <button class="control-btn" id="btnShuffle" title="Aleatório">
+          <i data-lucide="shuffle"></i>
+        </button>
+        <button class="control-btn" id="btnPrev" title="Anterior">
+          <i data-lucide="skip-back"></i>
+        </button>
+        <button class="control-btn btn-play-pause" id="btnPlayPause" title="Play/Pause">
+          <i data-lucide="play"></i>
+        </button>
+        <button class="control-btn" id="btnNext" title="Próxima">
+          <i data-lucide="skip-forward"></i>
+        </button>
+        <button class="control-btn" id="btnRepeat" title="Repetir">
+          <i data-lucide="repeat"></i>
+        </button>
+      </div>
+
+      <div class="seek-container">
+        <span class="time-label" id="timeCurrent">0:00</span>
+        <input type="range" class="seek-bar" id="seekBar" min="0" max="100" value="0" step="0.1">
+        <span class="time-label" id="timeTotal">0:00</span>
+      </div>
+    </div>
+
+    <!-- Direita / Mobile Actions: Controles Rápidos Mobile & Volume Desktop -->
+    <div class="player-right">
+      <button class="control-btn mobile-play-btn" id="btnMobilePlayPause" title="Play/Pause">
+        <i data-lucide="play"></i>
+      </button>
+      <button class="control-btn btn-lyrics-toggle" id="btnLyrics" title="Letras Sincronizadas (Karaokê)">
+        <i data-lucide="mic"></i>
+      </button>
+      <button class="control-btn btn-queue-toggle" id="btnQueueToggle" title="Fila de Reprodução">
+        <i data-lucide="list-music"></i>
+      </button>
+      <div class="volume-container">
+        <button class="btn-vol-icon" id="btnVolToggle" title="Mudo / Volume">
+          <i data-lucide="volume-2" id="volIcon"></i>
+        </button>
+        <input type="range" class="volume-bar" id="volumeBar" min="0" max="100" value="80" step="1">
+      </div>
+    </div>
+  </footer>
+
+  <!-- Barra de Navegação Inferior para Celular (Mobile Bottom Navigation) -->
+  <nav class="mobile-nav-bar" id="mobileNavBar">
+    <a class="mobile-nav-item active" data-view="home">
+      <i data-lucide="home"></i>
+      <span>Início</span>
+    </a>
+    <a class="mobile-nav-item" data-view="tracks">
+      <i data-lucide="music"></i>
+      <span>Músicas</span>
+    </a>
+    <a class="mobile-nav-item" data-view="playlists">
+      <i data-lucide="list-music"></i>
+      <span>Playlists</span>
+    </a>
+    <a class="mobile-nav-item" data-view="albums">
+      <i data-lucide="disc"></i>
+      <span>Álbuns</span>
+    </a>
+    <a class="mobile-nav-item" data-view="downloader">
+      <i data-lucide="arrow-down-circle"></i>
+      <span>Downloads</span>
+    </a>
+  </nav>
+
+  <!-- Tela Cheia Mobile Now Playing (Estilo Spotify Mobile) -->
+  <div class="mobile-now-playing" id="mobileNowPlaying">
+    <div class="mnp-backdrop-glow" id="mnpBackdropGlow"></div>
+
+    <!-- Header Fixo Superior -->
+    <div class="mnp-header">
+      <button class="mnp-btn-icon" id="btnMnpClose" title="Minimizar">
+        <i data-lucide="chevron-down"></i>
+      </button>
+      <div class="mnp-header-info">
+        <span class="mnp-header-subtitle">TOCANDO DA BIBLIOTECA</span>
+        <span class="mnp-header-title" id="mnpHeaderContext">Músicas da Biblioteca</span>
+      </div>
+      <button class="mnp-btn-icon" id="btnMnpOptions" title="Opções">
+        <i data-lucide="more-vertical"></i>
+      </button>
+    </div>
+
+    <!-- Conteúdo Rolável -->
+    <div class="mnp-scroll-content">
+      <!-- Seção Principal do Player -->
+      <div class="mnp-main-section">
+        <!-- Capa do Álbum em Destaque -->
+        <div class="mnp-cover-wrap">
+          <img src="/static/img/default-cover.svg" class="mnp-cover" id="mnpCover" alt="Cover">
+        </div>
+
+        <!-- Metadados da Faixa e Botão de Favoritar -->
+        <div class="mnp-meta-row">
+          <div class="mnp-track-info">
+            <h1 class="mnp-title" id="mnpTitle">Título da Música</h1>
+            <p class="mnp-artist" id="mnpArtist">Nome do Artista</p>
+          </div>
+          <button class="mnp-fav-btn" id="btnMnpFav" title="Favoritar">
+            <i data-lucide="heart" id="mnpFavIcon"></i>
+          </button>
+        </div>
+
+        <!-- Barra de Progresso / Seek -->
+        <div class="mnp-seek-section">
+          <input type="range" class="seek-bar mnp-seek-bar" id="mnpSeekBar" min="0" max="100" value="0" step="0.1">
+          <div class="mnp-time-row">
+            <span class="mnp-time" id="mnpTimeCurrent">0:00</span>
+            <span class="mnp-time" id="mnpTimeTotal">0:00</span>
+          </div>
+        </div>
+
+        <!-- Controles Principais de Reprodução -->
+        <div class="mnp-controls-row">
+          <button class="mnp-ctrl-btn" id="btnMnpShuffle" title="Modo Aleatório">
+            <i data-lucide="shuffle"></i>
+          </button>
+          <button class="mnp-ctrl-btn mnp-ctrl-skip" id="btnMnpPrev" title="Anterior">
+            <i data-lucide="skip-back"></i>
+          </button>
+          <button class="mnp-play-btn" id="btnMnpPlayPause" title="Play/Pause">
+            <i data-lucide="play" id="mnpPlayIcon"></i>
+          </button>
+          <button class="mnp-ctrl-btn mnp-ctrl-skip" id="btnMnpNext" title="Próxima">
+            <i data-lucide="skip-forward"></i>
+          </button>
+          <button class="mnp-ctrl-btn" id="btnMnpRepeat" title="Repetir">
+            <i data-lucide="repeat" id="mnpRepeatIcon"></i>
+          </button>
+        </div>
+
+        <!-- Ações Adicionais Rápidas -->
+        <div class="mnp-actions-row">
+          <button class="mnp-action-btn" id="btnMnpLyricsQuick" title="Letras">
+            <i data-lucide="mic"></i>
+          </button>
+          <button class="mnp-action-btn" id="btnMnpQueue" title="Fila de Reprodução">
+            <i data-lucide="list-music"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Card de Prévia da Letra (Spotify Style) -->
+      <div class="mnp-lyrics-card" id="mnpLyricsCard">
+        <div class="mnp-lyrics-card-header">
+          <span class="mnp-lyrics-title">Letra</span>
+          <div class="mnp-lyrics-card-actions">
+            <button class="mnp-lyrics-expand-btn" id="btnMnpExpandLyrics" title="Expandir Letra Completa">
+              <i data-lucide="maximize-2"></i>
+              <span>Ampliar</span>
+            </button>
+          </div>
+        </div>
+        <div class="mnp-lyrics-snippet" id="mnpLyricsSnippet">
+          <p class="mnp-snippet-line">Carregando letra sincronizada...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visualizador de Letras Sincronizadas (Modal Estilo Karaokê Apple Music) -->
+  <div class="lyrics-overlay" id="lyricsOverlay">
+    <div class="lyrics-backdrop-glow" id="lyricsBackdropGlow"></div>
+    
+    <div class="lyrics-header">
+      <div class="lyrics-track-summary">
+        <img src="/static/img/default-cover.svg" id="lyricsHeaderCover" class="lyrics-cover-mini" alt="Cover">
+        <div>
+          <div class="lyrics-header-title" id="lyricsHeaderTitle">Título</div>
+          <div class="lyrics-header-artist" id="lyricsHeaderArtist">Artista</div>
+        </div>
+      </div>
+
+      <div class="lyrics-header-actions">
+        <button class="btn-refetch-lyrics" id="btnRefetchLyrics" title="Buscar Letra Novamente">
+          <i data-lucide="refresh-cw" style="width: 15px; height: 15px;"></i>
+          <span>Buscar Letra</span>
+        </button>
+        <button class="btn-close-lyrics" onclick="window.lyricsViewer.close()" title="Fechar">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="lyrics-body" id="lyricsBody"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/player.js"></script>
+  <script src="/static/js/lyrics.js"></script>
+  <script src="/static/js/downloader.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

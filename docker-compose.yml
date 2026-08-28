@@ -1,0 +1,16 @@
+services:
+  harmony-music:
+    build: .
+    container_name: harmony-music
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    environment:
+      - HARMONY_HOST=0.0.0.0
+      - HARMONY_PORT=5050
+      - HARMONY_DEBUG=false
+      - HARMONY_MAX_PARALLEL=3
+    volumes:
+      - ./library:/app/library
+      - ./data:/app/data
+      - ./.env:/app/.env

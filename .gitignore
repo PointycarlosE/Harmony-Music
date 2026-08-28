@@ -1,0 +1,45 @@
+# --- Ambientes Virtuais ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Configurações Locais e Segredos ---
+.env
+*.env.local
+
+# --- Python Bytecode & Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# --- Armazenamento de Dados Locais ---
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/covers/*
+data/temp/*
+!data/covers/.gitkeep
+!data/temp/.gitkeep
+!data/.gitkeep
+
+# --- Músicas Locais do Usuário ---
+library/*
+!library/.gitkeep
+
+# --- Pastas Legadas / Temporárias ---
+spotify_downloads/
+playlist_downloads/
+*.tmp
+*.log
+
+# --- Sistema Operacional e IDEs ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
